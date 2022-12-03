@@ -21,6 +21,7 @@ impl AlphaSet {
 		};
 	}
 
+	#[allow(dead_code)]
 	fn clear(&mut self) {
 		self.set = 0;
 	}
@@ -61,12 +62,17 @@ fn main() {
 	*/
 	let mut line = String::new();
 	let mut _lines = 0;
+	let mut three_elves = Vec::<AlphaSet>::with_capacity(3);
+	three_elves.resize(3, AlphaSet {set: 0});
 	let mut total_priorities = 0;
+	let mut badge_priorities = 0;
 	while let Ok(length) = reader.read_line(&mut line) {
 		if length == 0 {
 			break;
 		}
 
+		/* Part 1 work
+		*/
 		// Get compartments
 		let split_index = line.len() / 2;
 
@@ -94,10 +100,33 @@ fn main() {
 			}
 		}
 
+		/* Part 2 work
+		*/
+		// Put entire line into set
+		let mut items = AlphaSet {set: 0};
+		for c in (&line.trim()).chars() {
+			items.set(c);
+		}
+
+		three_elves[_lines % 3] = items;
+
+		// If on third elf, find the common and add priorities
+		if _lines % 3 == 2 {
+			let common = three_elves[0] & three_elves[1] & three_elves[2];
+
+			for i in 0..52 {
+				if common.is_set(i) {
+					badge_priorities += i + 1;
+					break;
+				}
+			}
+		}
+
 		// Per-loop stuff
 		_lines += 1;
 		line.clear();
 	}
 
 	println!("Total of priorities = {total_priorities}");
+	println!("Total badge priorities = {badge_priorities}");
 }
