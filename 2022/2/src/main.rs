@@ -3,11 +3,18 @@ use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 enum Move {
 	Rock = 1,
 	Paper = 2,
 	Scissor = 3,
+}
+
+#[derive(PartialEq, Eq, Copy, Clone)]
+enum Outcome {
+	Lose = 0,
+	Draw = 3,
+	Win = 6,
 }
 
 impl PartialOrd for Move {
@@ -42,6 +49,28 @@ impl PartialOrd for Move {
 	}
 }
 
+impl Outcome {
+	pub fn move_given_opponent(&self, opponent_move: &Move) -> Move {
+		match self {
+			Outcome::Lose => {
+				match opponent_move {
+					Move::Rock => Move::Scissor,
+					Move::Paper => Move::Rock,
+					Move::Scissor => Move::Paper,
+				}
+			},
+			Outcome::Draw => *opponent_move,
+			Outcome::Win => {
+				match opponent_move {
+					Move::Rock => Move::Paper,
+					Move::Paper => Move::Scissor,
+					Move::Scissor => Move::Rock,
+				}
+			},
+		}
+	}
+}
+
 fn main() {
 	/* Get reader for input file
 	*/
@@ -60,7 +89,8 @@ fn main() {
 	/* Do challenge
 	*/
 	let mut line = String::new();
-	let mut total_points = 0;
+	let mut total_points_1 = 0;
+	let mut total_points_2 = 0;
 	let mut _lines = 0;
 	while let Ok(length) = reader.read_line(&mut line) {
 		// Line reader EOF condition
@@ -68,6 +98,7 @@ fn main() {
 			break;
 		}
 
+		// Part 1 things
 		let elf_move = match &line[0..1] {
 			"A" => Move::Rock,
 			"B" => Move::Paper,
@@ -80,20 +111,30 @@ fn main() {
 			"Z" => Move::Scissor,
 			_ => panic!("Unknown move on line {_lines}!"),
 		};
-
-		let game_points = match my_move.partial_cmp(&elf_move).unwrap() {
-			Ordering::Less => 0,
-			Ordering::Equal => 3,
-			Ordering::Greater => 6,
+		let game_result = match my_move.partial_cmp(&elf_move).unwrap() {
+			Ordering::Less => Outcome::Lose,
+			Ordering::Equal => Outcome::Draw,
+			Ordering::Greater => Outcome::Win,
 		};
 
-		total_points += my_move as i32 + game_points;
+		// Part 2 things
+		let intended_result = match &line[2..3] {
+			"X" => Outcome::Lose,
+			"Y" => Outcome::Draw,
+			"Z" => Outcome::Win,
+			_ => panic!("Unknown move on line {_lines}!"),
+		};
+		let planned_move = intended_result.move_given_opponent(&elf_move);
+
+		total_points_1 += my_move as i32 + game_result as i32;
+		total_points_2 += planned_move as i32 + intended_result as i32;
 
 		_lines += 1;
 		line.clear();
 	}
 
-	println!("You earned {total_points} points!");
+	println!("You earned {total_points_1} points!");
+	println!("You are supposed to earn {total_points_2} points!");
 }
 
 /** Tests section
