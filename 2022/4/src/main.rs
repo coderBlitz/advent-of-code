@@ -12,7 +12,9 @@ struct Range {
 impl Range {
 	// If two ranges overlap at all
 	fn overlaps(&self, other: &Self) -> bool {
-		(self.start <= other.start && other.start <= self.end) || (self.start <= other.end && other.end <= self.end)
+		other.contains(self)
+		|| (self.start <= other.start && other.start <= self.end)
+		|| (self.start <= other.end && other.end <= self.end)
 	}
 
 	// If this range fully contains another range (superset, non-proper)
@@ -41,6 +43,7 @@ fn main() {
 	let mut line = String::new();
 	let mut _lines = 0;
 	let mut total_supersets = 0;
+	let mut total_overlaps = 0;
 	while let Ok(length) = reader.read_line(&mut line) {
 		if length == 0 {
 			break;
@@ -59,10 +62,17 @@ fn main() {
 			total_supersets += 1;
 		}
 
+		/* Part 2
+		*/
+		if elf_1_range.overlaps(&elf_2_range) {
+			total_overlaps += 1;
+		}
+
 		// Per-iteration things
 		_lines += 1;
 		line.clear();
 	}
 
 	println!("Total supersets = {total_supersets}");
+	println!("Total overlaps = {total_overlaps}");
 }
