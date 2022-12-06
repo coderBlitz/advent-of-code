@@ -93,6 +93,7 @@ fn main() {
 
 	/* Do movement processing
 	*/
+	let mut stacks2 = stacks.clone();
 	line.clear();
 	while let Ok(length) = reader.read_line(&mut line) {
 		if length == 0 {
@@ -105,12 +106,19 @@ fn main() {
 		let src_stack: usize = nums[3].parse::<usize>().unwrap() - 1; // 0-indexed
 		let dst_stack: usize = nums[5].parse::<usize>().unwrap() - 1;
 
-		println!("Moving {n_to_move} crates from {src_stack} to {dst_stack}");
+		//println!("Moving {n_to_move} crates from {src_stack} to {dst_stack}");
 		// Do movement
 		for _ in 0..n_to_move {
 			let grab = stacks[src_stack].pop().unwrap();
 			stacks[dst_stack].push(grab);
 		}
+
+		/* Part 2
+		*/
+		// TODO: Drain collect
+		let pop_start = stacks2[src_stack].len() - n_to_move;
+		let grab: Vec<_> = stacks2[src_stack].drain(pop_start..).collect();
+		stacks2[dst_stack].extend(grab);
 
 		// Iterate stuff
 		_lines += 1;
@@ -118,10 +126,16 @@ fn main() {
 	}
 
 	let mut res = String::new();
-	for (i, stack) in stacks.iter().enumerate() {
-		println!("Stack {i} final size = {}. Top is {}", stack.len(), stack.last().unwrap());
+	for (_i, stack) in stacks.iter().enumerate() {
+		//println!("Stack {i} final size = {}. Top is {}", stack.len(), stack.last().unwrap());
 		res.push(stack.last().unwrap().as_bytes()[0] as char);
+	}
+	let mut res2 = String::new();
+	for (_i, stack) in stacks2.iter().enumerate() {
+		//println!("Stack {i} final size = {}. Top is {}", stack.len(), stack.last().unwrap());
+		res2.push(stack.last().unwrap().as_bytes()[0] as char);
 	}
 
 	println!("res = {res}");
+	println!("res2 = {res2}");
 }
