@@ -48,6 +48,42 @@ impl BitAnd for AlphaSet {
 	}
 }
 
+fn process_stream(stream: &String, uniq: usize) -> usize {
+	let mut set = Vec::with_capacity(uniq);
+	let mut line_enum = stream.chars().enumerate();
+	while let Some((_,c)) = line_enum.next() {
+		set.push(c);
+
+		if set.len() == uniq {
+			break;
+		}
+	}
+
+	let mut sop = uniq; // start-of-packet cannot be less than uniq
+	let mut check = AlphaSet {set: 0};
+	for (pos,c) in line_enum {
+		// Add vector values to bit set
+		for t in &set {
+			check.set(*t);
+		}
+
+		// Check if unique
+		if check.count_set() as usize == uniq {
+			// Success!
+			sop = pos;
+			break;
+		}
+
+		// Insert new character
+		set[pos % uniq] = c;
+
+		// Reset for next loop
+		check.clear();
+	}
+
+	sop
+}
+
 fn main() {
 	/* Get reader for input file
 	*/
@@ -74,38 +110,12 @@ fn main() {
 
 		/* Part 1
 		*/
-		const UNIQ: usize = 4;
-		let mut set = Vec::with_capacity(UNIQ);
-		let mut line_enum = line.chars().enumerate();
-		while let Some((_,c)) = line_enum.next() {
-			set.push(c);
+		let sop = process_stream(&line, 4);
+		println!("SOP = {sop}");
 
-			if set.len() == UNIQ {
-				break;
-			}
-		}
-
-		let mut sop = UNIQ; // start-of-packet cannot be less than UNIQ
-		let mut check = AlphaSet {set: 0};
-		for (pos,c) in line_enum {
-			// Add vector values to bit set
-			for t in &set {
-				check.set(*t);
-			}
-
-			// Check if unique
-			if check.count_set() as usize == UNIQ {
-				// Success!
-				sop = pos;
-				break;
-			}
-
-			// Insert new character
-			set[pos % UNIQ] = c;
-
-			// Reset for next loop
-			check.clear();
-		}
+		/* Part 2
+		*/
+		let sop = process_stream(&line, 14);
 		println!("SOP = {sop}");
 
 		// Per-iteration things
