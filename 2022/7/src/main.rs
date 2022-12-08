@@ -17,16 +17,6 @@ struct DirEntry {
 	kind: DirEntryKind
 }
 
-fn dir_size(dirs: &BTreeMap<String, Vec<DirEntry>>, dir: &str) -> usize {
-	let mut sum = 0;
-	if let Some(entries) = dirs.get(dir) {
-		for entry in entries {
-			sum += entry.size;
-		}
-	}
-
-	sum
-}
 
 fn main() {
 	/* Get reader for input file
@@ -45,8 +35,6 @@ fn main() {
 
 	/* Do challenge
 	*/
-	//let v = &mut Vec::new();
-	//let dirs = &mut BTreeMap::<String, Vec<DirEntry>>::new();
 	let files = &mut BTreeMap::<String, DirEntry>::new();
 	let mut cwd = PathBuf::new();
 	let mut line = String::new();
@@ -63,18 +51,11 @@ fn main() {
 		If cd
 			change cwd
 		If ls
-			Add all entries (as DirEntry) to a Vector
-			Put directory in treemap (and only directories), and map it to the Vector
+			Put all entries in treemap, and map it to the Vector
 		*/
 		if &trimmed[0..1] == "$" {
 			// Finish last collection command
 			collecting_files = false;
-			/*if v.len() > 0 {
-				// Add entry for cwd into files map
-				files.insert(cwd.to_str().unwrap().to_string(), v.clone());
-
-				v.clear();
-			}*/
 
 			// CMD stuff
 			let command: Vec<&str> = trimmed[2..].split_whitespace().collect();
@@ -109,11 +90,6 @@ fn main() {
 			}
 
 			// Push entry
-			/*v.push( DirEntry {
-				name: entry[1].to_string(),
-				size: size,
-				kind: kind
-			});*/
 			let fname = entry[1].to_string();
 			let path = &mut PathBuf::new();
 			path.push(&cwd);
@@ -132,6 +108,7 @@ fn main() {
 
 	println!("Parsed {} files!", files.len());
 
+	// Insert root folder for total size
 	let root = String::from("/");
 	files.insert(root.clone(), DirEntry {
 		name: root,
@@ -158,6 +135,8 @@ fn main() {
 		}
 	}
 
+	/* Part 1
+	*/
 	let mut sum = 0;
 	let dirs = &mut Vec::new();
 	for (path, entry) in files.iter() {
@@ -175,14 +154,18 @@ fn main() {
 
 	/* Part 2
 	*/
-	dirs.sort_by_key(|x| x.1.size);
 	let all_sizes: &mut Vec<(_,_)> = &mut files.iter().collect();
 	all_sizes.sort_by_key(|x| x.1.size);
 
-	let target = 8_381_165;
+	// Have 70 mil space, need at least 30 mil free. So need root to be less than 40 mil. Take difference
+	let rt = String::from("/");
+	let target = files.get(&rt).unwrap().size - 40_000_000;
+	println!("Target = {target}");
+
 	for (path, dir) in all_sizes {
 		if dir.size >= target {
 			println!("{path} with size _{}", dir.size);
+			break;
 		}
 	}
 }
