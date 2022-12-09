@@ -2,6 +2,59 @@ use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 
+fn scenic_score(trees: &Vec<u32>, row_size: usize, idx: usize) -> usize {
+	let (base_row, base_col) = (idx / row_size, idx % row_size);
+
+	let base_height = trees[idx];
+
+	// Check left
+	let mut left_views = 0;
+	for i in (0..base_col).rev() {
+		let pos = base_row * row_size + i;
+
+		left_views += 1;
+		if trees[pos] >= base_height {
+			break;
+		}
+	}
+
+	// Check right
+	let mut right_views = 0;
+	for i in (base_col+1)..row_size {
+		let pos = base_row * row_size + i;
+
+		right_views += 1;
+		if trees[pos] >= base_height {
+			break;
+		}
+	}
+
+	// Check up
+	let mut up_views = 0;
+	for i in (0..base_row).rev() {
+		let pos = i * row_size + base_col;
+
+		up_views += 1;
+		if trees[pos] >= base_height {
+			break;
+		}
+	}
+
+	// Check down
+	let mut down_views = 0;
+	for i in (base_row+1)..row_size {
+		let pos = i * row_size + base_col;
+
+		down_views += 1;
+		if trees[pos] >= base_height {
+			break;
+		}
+	}
+
+	//println!("{left_views} {right_views} {up_views} {down_views}");
+	left_views * right_views * up_views * down_views
+}
+
 fn main() {
 	/* Get reader for input file
 	*/
@@ -98,7 +151,8 @@ fn main() {
 		}
 	}
 
-	// Count
+	/* Part 1
+	*/
 	let mut trees_visible = 4 * (row_size - 1); // All outer are visible
 	for &i in visible_vec.iter() {
 		if i > 0 {
@@ -107,4 +161,23 @@ fn main() {
 	}
 
 	println!("Total visible = {trees_visible}");
+
+	/* Part 2
+	*/
+	// Iterate
+	let mut max_scenic = 0;
+	for i in 1..(_lines-1) {
+		let row = row_size * i;
+
+		for j in 1..(row_size-1) {
+			let idx = row + j;
+
+			let scenic = scenic_score(tree_vec, row_size, idx);
+			if scenic > max_scenic {
+				max_scenic = scenic;
+			}
+		}
+	}
+
+	println!("Max scenic = {max_scenic}");
 }
