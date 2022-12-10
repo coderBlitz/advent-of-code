@@ -75,4 +75,31 @@ fn main() {
 	}
 
 	println!("sum = {val_sum}");
+
+	/* Part 2
+	*/
+	for row in 0..6 {
+		let pixels = &mut String::with_capacity(40);
+		for col in 1..=40 {
+			let pos = row * 40 + col;
+
+			// Grab state for current cycle position
+			let idx = match x_cycles.binary_search_by_key(&pos, |x| x.cycle) {
+				Ok(i) => i,
+				Err(i) => i.checked_sub(1).unwrap_or(i),
+			};
+			let state = x_cycles[idx];
+			//println!("{pos} --- {}", state.value);
+
+			// Check if pixel drawn
+			if (state.value - (col-1) as isize).abs() <= 1 {
+				pixels.push('#');
+			} else {
+				pixels.push('.');
+			}
+		}
+
+		println!("{pixels}");
+		pixels.clear();
+	}
 }
