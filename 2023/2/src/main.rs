@@ -23,9 +23,9 @@ fn main() {
 
 	/* Do challenge
 	*/
-	const RED_MAX: usize = 12;
-	const GREEN_MAX: usize = 13;
-	const BLUE_MAX: usize = 14;
+	const _RED_MAX: usize = 12;
+	const _GREEN_MAX: usize = 13;
+	const _BLUE_MAX: usize = 14;
 
 	let mut line = String::new();
 	let mut _lines = 0;
@@ -36,7 +36,7 @@ fn main() {
 		}
 
 		/* PART 1 */
-		let colon_idx = line.find(':').unwrap();
+		/*let colon_idx = line.find(':').unwrap();
 		let (game, reveals) = line.split_at(colon_idx);
 		let game_num: usize = game.strip_prefix("Game ").unwrap().parse().unwrap();
 		let mut valid = true;
@@ -61,7 +61,28 @@ fn main() {
 		// Add if valid
 		if valid {
 			sum += game_num;
+		}*/
+
+		/* PART 2 */
+		let colon_idx = line.find(':').unwrap();
+		let (_, reveals) = line.split_at(colon_idx);
+		let (mut min_red, mut min_green, mut min_blue) = (0, 0, 0);
+		for reveal in reveals.split_terminator(';') {
+			for entry in reveal.split_terminator(',') {
+				let mut t = entry.trim_start_matches(&[':',' ']).split_whitespace();
+				let count: usize = t.next().unwrap().parse().unwrap();
+				let color = t.next().unwrap();
+
+				match color {
+					"red" => min_red = min_red.max(count),
+					"green" => min_green = min_green.max(count),
+					"blue" => min_blue = min_blue.max(count),
+					_ => panic!(),
+				};
+			}
 		}
+		let power = min_red * min_green * min_blue;
+		sum += power;
 
 		// Per-iteration things
 		_lines += 1;
