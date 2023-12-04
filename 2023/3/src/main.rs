@@ -10,9 +10,9 @@ struct Entry {
 	typ: EntryType,
 	span: Range<usize>,
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 enum EntryType {
-	Sym,
+	Sym(char, Vec<usize>), // Adjacent entries
 	Num(usize),
 }
 
@@ -70,7 +70,7 @@ fn main() {
 					span: Range {start: idx.saturating_sub(1), end: (idx + ent_str.len()).min(line.len()-2)},
 				},
 				Err(_) => Entry {
-					typ: EntryType::Sym,
+					typ: EntryType::Sym(ent_str.chars().nth(0).unwrap(), Vec::new()),
 					span: Range {start: idx, end: idx},
 				},
 			});
@@ -88,97 +88,67 @@ fn main() {
 			a.start <= b.end && b.start <= a.end
 		}
 
-		// Iterate current row
-		let mut c = 0;
-		let mut p = 0;
-		let mut last_ent: Option<Entry> = None;
-		while c < cur_row.len() {
-			// While c is ahead, move p up.
-			while p < prev_row.len() && prev_row[p].span.end < cur_row[c].span.start {
-				p += 1;
-			}
-
-			//println!("Previou {p} : {prev_row:?}");
-			//println!("Current {c} : {cur_row:?}");
-
-			// Only handle symbol entries in previous row. Sum then remove values if overlapped.
-			if let EntryType::Num(v) = cur_row[c].typ {
-				// Check against current row
-				if let Some(ref e) = last_ent { if let EntryType::Sym = e.typ {
-					if overlap(&e.span, &cur_row[c].span) {
-						sum += v;
-						cur_row.remove(c);
-						last_ent = None; // Clear last entry since current gets removed
-						continue;
-					}
-				}}
-
-				// Check against previous row
-				if p < prev_row.len() {
-					if let EntryType::Sym = prev_row[p].typ {
-						if overlap(&prev_row[p].span, &cur_row[c].span) {
-							//println!("{:?} and {:?} overlap!", prev_row[p], cur_row[c]);
-							sum += v;
-							cur_row.remove(c);
-							continue;
+		// Iterate current & previous rows
+		for c in cur_row.iter_mut() {
+			for p in prev_row.iter_mut() {
+				match p.typ {
+					EntryType::Sym(_, ref mut adj) => { if let EntryType::Num(v) = c.typ {
+						if overlap(&p.span, &c.span) {
+							adj.push(v);
 						}
-					};
-				}
-			}
-
-			// Remember last symbol span in current row
-			if let EntryType::Sym = cur_row[c].typ {
-				// If symbol found after number
-				if let Some(ref e) = last_ent { if let EntryType::Num(v) = e.typ {
-					if overlap(&e.span, &cur_row[c].span) {
-						sum += v;
-						last_ent = Some(cur_row[c].clone()); // Done here since continue skips below logic
-						cur_row.remove(c-1); // Previous entry (since symbol is after number)
-						continue;
-					}
-				}}
-			}
-
-			last_ent = Some(cur_row[c].clone());
-
-			// Increment if p overlaps, since top loop stops upon overlap (and can't iterate beyond it).
-			if p < prev_row.len() && overlap(&prev_row[p].span, &cur_row[c].span) {
-				p += 1;
-			} else {
-				c += 1;
+					}},
+					EntryType::Num(v) => { if let EntryType::Sym(_, ref mut adj) = c.typ {
+						if overlap(&p.span, &c.span) {
+							adj.push(v);
+						}
+					}},
+				};
 			}
 		}
 
-		// Iterate previous row
-		c = 0;
-		p = 0;
-		while p < prev_row.len() {
-			// While p is ahead, move c up.
-			while c < cur_row.len() && cur_row[c].span.end < prev_row[p].span.start {
-				c += 1;
-			}
-
-			// Only handle symbol entries in current row. Sum then remove values if overlapped.
-			if c < cur_row.len() {
-				if let EntryType::Sym = cur_row[c].typ {
-					if let EntryType::Num(v) = prev_row[p].typ {
-						if overlap(&prev_row[p].span, &cur_row[c].span) {
-							//println!("{:?} and {:?} overlap!", prev_row[p], cur_row[c]);
-							sum += v;
-							prev_row.remove(p);
-							continue;
+		let mut i = 0;
+		while i < cur_row.len() {
+			let c_span = cur_row[i].span.clone();
+			// If space on left
+			if i > 0 {
+				let c1_span = cur_row[i-1].span.clone();
+				if let EntryType::Num(v) = cur_row[i-1].typ {
+					if let EntryType::Sym(_, ref mut adj) = cur_row[i].typ {
+						if overlap(&c1_span, &c_span) {
+							adj.push(v);
 						}
-					};
+					}
 				}
 			}
 
-			// Increment if c overlaps, since top loop stops upon overlap (and can't iterate beyond it).
-			if c < cur_row.len() && overlap(&prev_row[p].span, &cur_row[c].span) {
-				c += 1;
-			} else {
-				p += 1;
+			// If space on right
+			if i < cur_row.len().saturating_sub(1) {
+				let c1_span = cur_row[i+1].span.clone();
+				if let EntryType::Num(v) = cur_row[i+1].typ {
+					if let EntryType::Sym(_, ref mut adj) = cur_row[i].typ {
+						if overlap(&c1_span, &c_span) {
+							adj.push(v);
+						}
+					}
+				}
 			}
+
+			i += 1;
 		}
+
+		/* PART 2 */
+		// Check previous row symbols
+		let gear_total: usize = prev_row.iter().filter_map(|e| {
+			match e.typ {
+				EntryType::Sym(c, ref v) => {
+					if c == '*' && v.len() == 2 {
+						Some(v.iter().product::<usize>())
+					} else { None }
+				},
+				_ => None,
+			}
+		}).sum();
+		sum += gear_total;
 
 		// Migrate leftover to next previous
 		prev_row = cur_row;
