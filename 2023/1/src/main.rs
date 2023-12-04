@@ -6,44 +6,78 @@ use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 
+/// Iterate a string slice returning all numeric digits and numeric representation of digit words.
+///
 struct DigitIter<'a>(usize, &'a str);
 impl Iterator for DigitIter<'_> {
 	type Item = usize;
 
 	fn next(&mut self) -> Option<Self::Item> {
 		let mut it = self.1.bytes().skip(self.0);
-		let len = self.1.len();
-		for i in self.0 .. self.1.len() {
-			self.0 += 1; // Increment early for simplicity
-
+		while self.0 < self.1.len() {
 			let b = it.next().unwrap() as usize;
-			let short_slice = &self.1[i .. (i + 3).min(len)];
-			let mid_slice = &self.1[i .. (i + 4).min(len)];
-			let long_slice = &self.1[i .. (i + 5).min(len)];
+			let hay = &self.1[self.0 ..];
+			self.0 += 1; // Increment early for simplicity
 
 			// If digit, just return value
 			if (0x30..=0x39).contains(&b){
 				return Some((b - 0x30) as usize)
 			}
 
-			// Check short digit names
-			if short_slice.find("one").is_some() {
+			// Check digit names
+			if hay.strip_prefix("one").is_some() {
 				return Some(1)
-			} else if short_slice.find("two").is_some() {
+			} else if hay.strip_prefix("two").is_some() {
 				return Some(2)
-			} else if short_slice.find("six").is_some() {
+			} else if hay.strip_prefix("six").is_some() {
 				return Some(6)
-			} else if mid_slice.find("four").is_some() {
+			} else if hay.strip_prefix("four").is_some() {
 				return Some(4)
-			} else if mid_slice.find("five").is_some() {
+			} else if hay.strip_prefix("five").is_some() {
 				return Some(5)
-			} else if mid_slice.find("nine").is_some() {
+			} else if hay.strip_prefix("nine").is_some() {
 				return Some(9)
-			} else if long_slice.find("three").is_some() {
+			} else if hay.strip_prefix("three").is_some() {
 				return Some(3)
-			} else if long_slice.find("seven").is_some() {
+			} else if hay.strip_prefix("seven").is_some() {
 				return Some(7)
-			} else if long_slice.find("eight").is_some() {
+			} else if hay.strip_prefix("eight").is_some() {
+				return Some(8)
+			}
+		}
+
+		None
+	}
+
+	fn last(self) -> Option<Self::Item> {
+		let mut it = self.1.bytes().rev();
+		for i in (0 .. self.1.len()).rev() {
+			let b = it.next().unwrap() as usize;
+			let hay = &self.1[i ..];
+
+			// If digit, just return value
+			if (0x30..=0x39).contains(&b){
+				return Some((b - 0x30) as usize)
+			}
+
+			// Check digit names
+			if hay.strip_prefix("one").is_some() {
+				return Some(1)
+			} else if hay.strip_prefix("two").is_some() {
+				return Some(2)
+			} else if hay.strip_prefix("six").is_some() {
+				return Some(6)
+			} else if hay.strip_prefix("four").is_some() {
+				return Some(4)
+			} else if hay.strip_prefix("five").is_some() {
+				return Some(5)
+			} else if hay.strip_prefix("nine").is_some() {
+				return Some(9)
+			} else if hay.strip_prefix("three").is_some() {
+				return Some(3)
+			} else if hay.strip_prefix("seven").is_some() {
+				return Some(7)
+			} else if hay.strip_prefix("eight").is_some() {
 				return Some(8)
 			}
 		}
