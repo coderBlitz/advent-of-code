@@ -106,6 +106,7 @@ fn main() {
 			}
 		}
 
+		// Iterate current row only
 		let mut i = 0;
 		while i < cur_row.len() {
 			let c_span = cur_row[i].span.clone();

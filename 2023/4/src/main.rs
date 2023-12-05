@@ -1,7 +1,3 @@
-/* Base file which contains template code for reading default input file, or
-taking a file as a command-line argument, as well as looping through all lines.
-*/
-
 use std::{
 	collections::{btree_map::Entry, BTreeMap, BTreeSet},
 	env,
