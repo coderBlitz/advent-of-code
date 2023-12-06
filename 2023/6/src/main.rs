@@ -25,23 +25,33 @@ fn main() {
 	let mut _lines = 0;
 	_ = reader.read_line(&mut line);
 
-	let times: Vec<usize> = line.strip_prefix("Time:").unwrap()
+	/*let times: Vec<usize> = line.strip_prefix("Time:").unwrap()
 		.trim()
 		.split_whitespace()
 		.map(|v| v.parse().unwrap())
-		.collect();
+		.collect();*/
+	let time: usize = line.strip_prefix("Time:").unwrap()
+		.trim()
+		.replace(' ', "")
+		.parse().unwrap();
+	let times = vec![time];
 
 	line.clear();
 	_ = reader.read_line(&mut line);
 	
-	let distances: Vec<usize> = line.strip_prefix("Distance:").unwrap()
+	/*let distances: Vec<usize> = line.strip_prefix("Distance:").unwrap()
 		.trim()
 		.split_whitespace()
 		.map(|v| v.parse().unwrap())
-		.collect();
+		.collect();*/
+	let distance: usize = line.strip_prefix("Distance:").unwrap()
+		.trim()
+		.replace(' ', "")
+		.parse().unwrap();
+	let distances = vec![distance];
 
-	println!("Times: {times:?}");
-	println!("Distances: {distances:?}");
+	println!("Time: {time}");
+	println!("Distance: {distance}");
 
 	let total: usize = times.iter().zip(distances.iter())
 		.map(|(&t,&d)| (1..=t).map(|i| i*(t-i)).filter(|&res| res > d).count())
