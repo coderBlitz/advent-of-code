@@ -1,7 +1,3 @@
-/* Base file which contains template code for reading default input file, or
-taking a file as a command-line argument, as well as looping through all lines.
-*/
-
 use std::{
 	env,
 	fs::File,
@@ -19,7 +15,7 @@ fn intersect_range(a: &Range<usize>, b: &Range<usize>) -> Option<Range<usize>> {
 
 	let start = a.start.max(b.start);
 	let end = a.end.min(b.end);
-	match start <= end {
+	match start < end {
 		true => Some(Range { start, end }),
 		false => None,
 	}
