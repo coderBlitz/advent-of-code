@@ -15,7 +15,8 @@ impl From<char> for Card {
 		'A' => 14,
 		'K' => 13,
 		'Q' => 12,
-		'J' => 11,
+		// 'J' => 11, // Part 1
+		'J' => 1, // Part 2
 		'T' => 10,
 		'9' => 9,
 		'8' => 8,
@@ -61,8 +62,33 @@ impl From<&[Card]> for Hand {
 			}
 		}
 
-		let max = *counts.values().max().unwrap();
-		let kind = match counts.keys().count() {
+		let mut max_non_j = *counts.iter()
+			.filter_map(|(k, v)| match *k {
+				Card(1) => None,
+				_ => Some(v),
+			}).max().unwrap_or(&0);
+		let mut key_count = counts.keys().count();
+
+		// Do joker stuff:
+		// 1. Add number of jokers to maximum (non-joker) card count
+		// 2. Remove 1 key (pretend joker was never there)
+		let num_j = *counts.iter()
+			.filter_map(|(k, v)|
+				if *k == Card(1) {
+					Some(v)
+				} else { None }
+			).next().unwrap_or(&0);
+
+		if num_j > 0 {
+			key_count = 1.max(key_count - 1); // Pretend remove jokers
+			max_non_j += num_j; // Pretend all jokers were part of highest card count
+		}
+
+
+		// Standard card analysis
+		//let max = *counts.values().max().unwrap(); // Part 1
+		let max = max_non_j;
+		let kind = match key_count {
 			5 => HandKind::HighCard,
 			1 => HandKind::FiveOfAKind,
 			4 => HandKind::OnePair,
