@@ -10,15 +10,19 @@ use std::{
 ///
 /// Returns (cycle_length, cycle_start), AKA (lambda, mu).
 fn find_cycle(start: usize, path: &Vec<char>, map: &HashMap<usize, (usize,usize)>) -> (usize, usize) {
+	let next_pos = |from: usize, dir: &char| -> usize {
+		match dir {
+			'L' => map.get(&from).unwrap().0,
+			'R' => map.get(&from).unwrap().1,
+			_ => unreachable!(),
+		}
+	};
+
 	let mut p_it = path.iter().cycle();
 	let mut p = 1;
 	let mut lam = 1;
 	let mut t = start;
-	let mut h = match p_it.next().unwrap() {
-		'L' => map.get(&start).unwrap().0,
-		'R' => map.get(&start).unwrap().1,
-		_ => unreachable!(),
-	};
+	let mut h = next_pos(start, p_it.next().unwrap());
 
 	// Find lambda
 	while t != h {
@@ -28,39 +32,24 @@ fn find_cycle(start: usize, path: &Vec<char>, map: &HashMap<usize, (usize,usize)
 			lam = 0;
 		}
 
-		h = match p_it.next().unwrap() {
-			'L' => map.get(&h).unwrap().0,
-			'R' => map.get(&h).unwrap().1,
-			_ => unreachable!(),
-		};
+		h = next_pos(h, p_it.next().unwrap());
 		lam += 1;
 	}
 
 	// Offset tortoise and hare
-	let mut h_it = path.iter().cycle();
-	let mut t_it = path.iter().cycle();
+	let mut h_it = path.iter();
 	t = start;
 	h = start;
 	for _ in 0..lam {
-		h = match h_it.next().unwrap() {
-			'L' => map.get(&h).unwrap().0,
-			'R' => map.get(&h).unwrap().1,
-			_ => unreachable!(),
-		};
+		h = next_pos(h, h_it.next().unwrap());
 	}
 
+	// Find mu
+	let mut t_it = path.iter();
 	let mut mu = 0;
 	while t != h {
-		h = match h_it.next().unwrap() {
-			'L' => map.get(&h).unwrap().0,
-			'R' => map.get(&h).unwrap().1,
-			_ => unreachable!(),
-		};
-		t = match t_it.next().unwrap() {
-			'L' => map.get(&t).unwrap().0,
-			'R' => map.get(&t).unwrap().1,
-			_ => unreachable!(),
-		};
+		h = next_pos(h, h_it.next().unwrap());
+		t = next_pos(t, t_it.next().unwrap());
 		mu += 1;
 	}
 
@@ -93,7 +82,7 @@ fn gcd(a: usize, b: usize) -> usize {
 fn lcm(a: usize, b: usize) -> usize {
 	let g = gcd(a,b);
 
-	(a*b) / g
+	a / g * b
 }
 
 
@@ -144,8 +133,14 @@ fn main() {
 		let node_hash = hasher.hash_one(node) as usize;
 		// Track start and end nodes
 		match node.chars().last() {
-			Some('A') => start_nodes.push(node_hash),
-			Some('Z') => end_nodes.push(node_hash),
+			Some('A') => {
+				println!("{node} -> {node_hash}");
+				start_nodes.push(node_hash)
+			},
+			Some('Z') => {
+				println!("{node} -> {node_hash}");
+				end_nodes.push(node_hash)
+			},
 			_ => {},
 		}
 		let (l_conn, r_conn) = conns.trim_end().split_once(',').unwrap();
@@ -183,10 +178,6 @@ fn main() {
 	let lcms: Vec<_> = cycles.iter().map(|c| lcm(steps.len(), c.0)).collect();
 	println!("LCM of cycles is {lcm_all}");
 	println!("LCMs {lcms:?}");
-	/* cycle notes
-	Highest offset is a base of sorts.
-	Difference of all offsets and base is how far into each cycle a given loop is.
-	*/
 
 	// Traverse map.
 	let mut num_steps = 0;
