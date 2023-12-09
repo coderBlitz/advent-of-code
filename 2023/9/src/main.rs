@@ -31,6 +31,7 @@ fn main() {
 
 		// Get numbers
 		let mut nums: Vec<isize> = line.trim_end().split_whitespace().map(|v| v.parse().unwrap()).collect();
+		nums.reverse(); // Part 2
 		//println!("{nums:?}");
 
 		// Compute down the line
