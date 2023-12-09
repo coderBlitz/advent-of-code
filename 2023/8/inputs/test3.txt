@@ -1,0 +1,12 @@
+L
+
+AAA = (CCC, CCC)
+BBA = (BBB, BBB)
+BBB = (BBC, BBC)
+BBC = (BBE, BBE)
+BBE = (BBF, BBF)
+BBF = (BBD, BBD)
+BBD = (BBZ, BBZ)
+CCC = (AAZ, AAZ)
+AAZ = (AAA, AAA)
+BBZ = (BBD, BBD)
