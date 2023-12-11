@@ -1,4 +1,5 @@
 use std::{
+	collections::HashMap,
 	env,
 	fs::File,
 	io::{BufReader, BufRead},
@@ -143,7 +144,7 @@ fn main() {
 	pos = choose_next(pos, pos).unwrap();
 
 	let i = 0;
-	while i < 10 {
+	while pos != start && i < 10 {
 		let last = *pipe.last().unwrap();
 		pipe.push(pos);
 		//println!("{} --> {}", map[last], map[pos]);
@@ -161,4 +162,70 @@ fn main() {
 	println!("Pipe: {pipe:?}");
 	let farthest = pipe[pipe.len() / 2];
 	println!("Farthest is {farthest} at {} steps", pipe.len() / 2);
+	let pipe_set: HashMap<usize, usize> = pipe.iter().enumerate().map(|(i, v)| (*v, i)).collect();
+
+	/* PART 2 */
+	// Determine winding
+	let mut last = pipe[1] as isize;
+	let mut dir = match last - pipe[0] as isize {
+		-1 => Dir::West,
+		1 => Dir::East,
+		x if x > 1 => Dir::South,
+		x if x < -1 => Dir::North,
+		_ => panic!(),
+	};
+	println!("Start dir: {dir:?}");
+	let mut turn_count: isize = 0;
+	for p in pipe.iter().skip(2) {
+		let new_dir = match *p as isize - last {
+			-1 => Dir::West,
+			1 => Dir::East,
+			x if x > 1 => Dir::South,
+			x if x < -1 => Dir::North,
+			_ => panic!(),
+		};
+		//println!("new_dir: {new_dir:?}");
+
+		match dir {
+			Dir::North => match new_dir {
+				Dir::East => turn_count += 1,
+				Dir::West => turn_count -= 1,
+				_ => (),
+			},
+			Dir::East => match new_dir {
+				Dir::South => turn_count += 1,
+				Dir::North => turn_count -= 1,
+				_ => (),
+			},
+			Dir::South => match new_dir {
+				Dir::West => turn_count += 1,
+				Dir::East => turn_count -= 1,
+				_ => (),
+			},
+			Dir::West => match new_dir {
+				Dir::North => turn_count += 1,
+				Dir::South => turn_count -= 1,
+				_ => (),
+			},
+		};
+
+		dir = new_dir;
+
+		last = *p as isize;
+	}
+
+	println!("Turn count: {turn_count}");
+	if turn_count > 0 {
+		println!("Pipe vector is clockwise!");
+	} else {
+		println!("Pipe vector is counter-clockwise!");
+	}
+}
+
+#[derive(Debug, Eq, PartialEq)]
+enum Dir {
+	North,
+	South,
+	East,
+	West,
 }
