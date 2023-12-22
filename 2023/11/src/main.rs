@@ -100,7 +100,7 @@ fn main() {
 			//println!("Col expansion: {col_expansion}");
 			//println!("<{:?}, {:?}> = {dist}", galaxies[i], galaxies[j]);
 
-			sum += dist + row_expansion as isize + col_expansion as isize;
+			sum += dist + (row_expansion as isize)*999_999 + (col_expansion as isize)*999_999;
 		}
 	}
 
