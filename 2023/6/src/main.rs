@@ -54,7 +54,10 @@ fn main() {
 	println!("Distance: {distance}");
 
 	let total: usize = times.iter().zip(distances.iter())
-		.map(|(&t,&d)| (1..=t).map(|i| i*(t-i)).filter(|&res| res > d).count())
-		.product();
+		.map(|(&t,&d)|
+			(1..=t).map(|i| i*(t-i))
+				.filter(|&res| res > d)
+				.count()
+		).product();
 	println!("Total: {total}");
 }

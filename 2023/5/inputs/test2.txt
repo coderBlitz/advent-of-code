@@ -1,10 +1,8 @@
-seeds: 0 2
+seeds: 0 1
 
 seed-to-soil map:
-1 0 2
+2 1 1
 
 soil-to-fertilizer map:
-3 1 1
 
 fertilizer-to-water map:
-5 2 1
