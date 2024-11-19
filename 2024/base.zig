@@ -1,5 +1,29 @@
 const std = @import("std");
 
+/// Split the given buffer on `delimiter` and end-of-buffer, appending slices to
+///  the given ArrayList for each field.
+fn split(arr: *std.ArrayList([]u8), buf: []u8, delimiter: u8) !usize {
+    var start: usize = 0;
+    var end: usize = 0;
+    var fields: usize = 1;
+
+    // Iterate the characters and append a new slice when a delimiter is found.
+    // At the end of an iteration where `c == delimiter`, `start == end`.
+    for (buf) |c| {
+        if (c == delimiter) {
+            try arr.append(buf[start..end]);
+            fields += 1;
+            start = end + 1;
+        }
+        end += 1;
+    }
+
+    // Always append remaining slice, even if empty.
+    try arr.append(buf[start..end]);
+
+    return fields;
+}
+
 pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
     const argc = std.os.argv.len;
@@ -18,12 +42,29 @@ pub fn main() !void {
 
     // Iterate lines.
     const reader = input_file.reader();
-    var buf: [4096]u8 = undefined;
 
+    var alloc_buf = std.mem.zeroes([2048]u8);
+    var buf_alloc = std.heap.FixedBufferAllocator.init(&alloc_buf);
+    const alloc = buf_alloc.allocator();
+
+    var buf: [4096]u8 = undefined;
     var i: usize = 0;
+    var fields = std.ArrayList([]u8).init(alloc);
+    defer fields.deinit();
     while (reader.readUntilDelimiterOrEof(&buf, '\n')) |maybe_line| : (i += 1) {
         const line = maybe_line orelse break;
         try stdout.print("Line {d} length: {d}\n", .{ i + 1, line.len });
+
+        // Test split on commas (simple CSV)
+        const n = try split(&fields, line, ',');
+
+        try stdout.print("Split returned {d} fields.\n", .{n});
+
+        for (fields.items) |field| {
+            try stdout.print("Field = {s}\n", .{field});
+        }
+
+        fields.clearRetainingCapacity();
     } else |_| {
         try stdout.print("Error\n", .{});
     }
