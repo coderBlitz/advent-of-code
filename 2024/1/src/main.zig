@@ -25,6 +25,6 @@ pub fn main() !void {
         const line = maybe_line orelse break;
         try stdout.print("Line {d} length: {d}\n", .{ i + 1, line.len });
     } else |_| {
-        try stdout.print("Error\n", .{});
+        try stdout.print("Error reached\n", .{});
     }
 }
