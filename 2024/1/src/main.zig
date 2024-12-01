@@ -43,29 +43,63 @@ pub fn main() !void {
     // Iterate lines.
     const reader = input_file.reader();
 
-    var alloc_buf = std.mem.zeroes([2048]u8);
-    var buf_alloc = std.heap.FixedBufferAllocator.init(&alloc_buf);
-    const alloc = buf_alloc.allocator();
+    //var alloc_buf = std.mem.zeroes([2048]u8);
+    //var buf_alloc = std.heap.FixedBufferAllocator.init(&alloc_buf);
+    //const alloc = buf_alloc.allocator();
+    const alloc = std.heap.page_allocator;
+    //defer alloc.deinit();
 
     var buf: [4096]u8 = undefined;
     var i: usize = 0;
     var fields = std.ArrayList([]u8).init(alloc);
+    var list1 = std.ArrayList(isize).init(alloc);
+    var list2 = std.ArrayList(isize).init(alloc);
     defer fields.deinit();
     while (reader.readUntilDelimiterOrEof(&buf, '\n')) |maybe_line| : (i += 1) {
         const line = maybe_line orelse break;
-        try stdout.print("Line {d} length: {d}\n", .{ i + 1, line.len });
+        //try stdout.print("Line {d} length: {d}\n", .{ i + 1, line.len });
 
-        // Test split on commas (simple CSV)
-        const n = try split(&fields, line, ',');
+        // Split on the space
+        _ = try split(&fields, line, ' ');
 
-        try stdout.print("Split returned {d} fields.\n", .{n});
+        //try stdout.print("Split returned {d} fields.\n", .{n});
 
-        for (fields.items) |field| {
-            try stdout.print("Field = {s}\n", .{field});
-        }
+        const num1 = try std.fmt.parseInt(isize, fields.items[0], 10);
+        const num2 = try std.fmt.parseInt(isize, fields.items[fields.items.len - 1], 10);
+        try list1.append(num1);
+        try list2.append(num2);
+        // for (fields.items) |field| {
+        //     try stdout.print("Field = {s}\n", .{field});
+        // }
 
         fields.clearRetainingCapacity();
     } else |_| {
         try stdout.print("Error\n", .{});
+    }
+
+    // Sort lists
+    std.sort.heap(isize, list1.items, {}, std.sort.asc(isize));
+    std.sort.heap(isize, list2.items, {}, std.sort.asc(isize));
+
+    // Diff and sum lists
+    i = 0;
+    var sum: usize = 0;
+    while (i < list1.items.len) : (i += 1) {
+        sum += @abs(list1.items[i] - list2.items[i]);
+    }
+
+    try stdout.print("Sum is {d}", .{sum});
+
+    // --- PART 2 ---
+    // Create hashmap
+    var count = std.hash_map.AutoHashMap(isize, usize).init(alloc);
+
+    for (list2.items) |num| {
+        const entry = try count.getOrPut(num);
+        if (entry.found_existing) {
+            entry.value_ptr.* += 1;
+        } else {
+            entry.value_ptr.* = 1;
+        }
     }
 }
