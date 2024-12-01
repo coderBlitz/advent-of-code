@@ -43,9 +43,8 @@ pub fn main() !void {
     // Iterate lines.
     const reader = input_file.reader();
 
-    var alloc_buf = std.mem.zeroes([2048]u8);
-    var buf_alloc = std.heap.FixedBufferAllocator.init(&alloc_buf);
-    const alloc = buf_alloc.allocator();
+    var page_alloc = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    const alloc = page_alloc.allocator();
 
     var buf: [4096]u8 = undefined;
     var i: usize = 0;
