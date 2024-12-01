@@ -93,6 +93,7 @@ pub fn main() !void {
     // --- PART 2 ---
     // Create hashmap
     var count = std.hash_map.AutoHashMap(isize, usize).init(alloc);
+    defer count.deinit();
 
     // Count entries
     for (list2.items) |num| {
