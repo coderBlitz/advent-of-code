@@ -83,17 +83,18 @@ pub fn main() !void {
 
     // Diff and sum lists
     i = 0;
-    var sum: usize = 0;
+    var sum: isize = 0;
     while (i < list1.items.len) : (i += 1) {
-        sum += @abs(list1.items[i] - list2.items[i]);
+        sum += @intCast(@abs(list1.items[i] - list2.items[i]));
     }
 
-    try stdout.print("Sum is {d}", .{sum});
+    try stdout.print("Sum is {d}\n", .{sum});
 
     // --- PART 2 ---
     // Create hashmap
     var count = std.hash_map.AutoHashMap(isize, usize).init(alloc);
 
+    // Count entries
     for (list2.items) |num| {
         const entry = try count.getOrPut(num);
         if (entry.found_existing) {
@@ -102,4 +103,14 @@ pub fn main() !void {
             entry.value_ptr.* = 1;
         }
     }
+
+    // New sum
+    sum = 0;
+    for (list1.items) |num| {
+        if (count.getPtr(num)) |v| {
+            sum += num * @as(isize, @intCast(v.*));
+        }
+    }
+
+    try stdout.print("Sum is {d}\n", .{sum});
 }
