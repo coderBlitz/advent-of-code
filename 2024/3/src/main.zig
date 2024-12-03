@@ -24,6 +24,19 @@ fn split(arr: *std.ArrayList([]u8), buf: []u8, delimiter: u8) !usize {
     return fields;
 }
 
+fn find_next(buf: []u8, char: u8) ?usize {
+    var i: usize = 0;
+    for (buf) |c| {
+        if (c == char) {
+            return i;
+        }
+
+        i += 1;
+    }
+
+    return null;
+}
+
 pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
     const argc = std.os.argv.len;
@@ -49,22 +62,57 @@ pub fn main() !void {
     var buf: [4096]u8 = undefined;
     var i: usize = 0;
     var fields = std.ArrayList([]u8).init(alloc);
+    var sum: usize = 0;
     defer fields.deinit();
     while (reader.readUntilDelimiterOrEof(&buf, '\n')) |maybe_line| : (i += 1) {
         const line = maybe_line orelse break;
         try stdout.print("Line {d} length: {d}\n", .{ i + 1, line.len });
 
         // Test split on commas (simple CSV)
-        const n = try split(&fields, line, ',');
+        //const n = try split(&fields, line, ',');
 
-        try stdout.print("Split returned {d} fields.\n", .{n});
+        //try stdout.print("Split returned {d} fields.\n", .{n});
 
-        for (fields.items) |field| {
-            try stdout.print("Field = {s}\n", .{field});
+        //for (fields.items) |field| {
+        //    try stdout.print("Field = {s}\n", .{field});
+        //}
+        var cursor = line[0..];
+        while (find_next(cursor, 'm')) |idx| {
+            cursor = cursor[idx..];
+            if (std.ascii.startsWithIgnoreCase(cursor[0..4], "mul(")) {
+                cursor = cursor[4..];
+
+                // Find closing parenthesis else break to next line.
+                if (find_next(cursor, ')')) |end| {
+                    const n = try split(&fields, cursor[0..end], ',');
+                    defer fields.clearRetainingCapacity();
+
+                    // If not 2 fields exactly, ignore and move on.
+                    if (n != 2) {
+                        continue;
+                    }
+
+                    // Try to parse the two fields.
+                    const num1 = std.fmt.parseInt(usize, fields.items[0], 10) catch continue;
+                    const num2 = std.fmt.parseInt(usize, fields.items[1], 10) catch continue;
+
+                    //try stdout.print("Found {d} and {d}.\n", .{ num1, num2 });
+
+                    sum += num1 * num2;
+
+                    // Move past closing parenthesis
+                    cursor = cursor[end + 1 ..];
+                } else {
+                    break;
+                }
+            } else {
+                // Skip single 'm' and move forward.
+                cursor = cursor[1..];
+            }
         }
-
-        fields.clearRetainingCapacity();
     } else |_| {
         try stdout.print("Error\n", .{});
     }
+
+    try stdout.print("Sum is {d}\n", .{sum});
 }
