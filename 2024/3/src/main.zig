@@ -64,6 +64,7 @@ pub fn main() !void {
     var fields = std.ArrayList([]u8).init(alloc);
     var sum: usize = 0;
     defer fields.deinit();
+    var enabled: bool = true;
     while (reader.readUntilDelimiterOrEof(&buf, '\n')) |maybe_line| : (i += 1) {
         const line = maybe_line orelse break;
         try stdout.print("Line {d} length: {d}\n", .{ i + 1, line.len });
@@ -77,9 +78,8 @@ pub fn main() !void {
         //    try stdout.print("Field = {s}\n", .{field});
         //}
         var cursor = line[0..];
-        while (find_next(cursor, 'm')) |idx| {
-            cursor = cursor[idx..];
-            if (std.ascii.startsWithIgnoreCase(cursor[0..4], "mul(")) {
+        while (cursor.len > 0) {
+            if (cursor.len >= 4 and enabled and std.ascii.startsWithIgnoreCase(cursor[0..4], "mul(")) {
                 cursor = cursor[4..];
 
                 // Find closing parenthesis else break to next line.
@@ -105,8 +105,14 @@ pub fn main() !void {
                 } else {
                     break;
                 }
+            } else if (cursor.len >= 4 and std.ascii.startsWithIgnoreCase(cursor[0..4], "do()")) {
+                enabled = true;
+                cursor = cursor[4..];
+            } else if (cursor.len >= 7 and std.ascii.startsWithIgnoreCase(cursor[0..7], "don't()")) {
+                enabled = false;
+                //try stdout.print("Disabling..\n", .{});
+                cursor = cursor[7..];
             } else {
-                // Skip single 'm' and move forward.
                 cursor = cursor[1..];
             }
         }
