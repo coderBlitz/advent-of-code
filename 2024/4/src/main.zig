@@ -126,4 +126,32 @@ pub fn main() !void {
     }
 
     try stdout.print("Sum is {d}\n", .{sum});
+
+    // --- Part 2 ---
+    i = 0;
+    j = 0;
+    sum = 0;
+    while (i < grid.items.len) : (i += 1) {
+        const row = grid.items[i];
+        j = 0;
+        var vbuf = [_]u8{ 0, 0, 0 };
+        while (j < row.items.len) : (j += 1) {
+            if (i < (grid.items.len - 2) and j < (row.items.len - 2)) {
+                vbuf[0] = grid.items[i].items[j];
+                vbuf[1] = grid.items[i + 1].items[j + 1];
+                vbuf[2] = grid.items[i + 2].items[j + 2];
+
+                if (std.mem.eql(u8, &vbuf, "MAS") or std.mem.eql(u8, &vbuf, "SAM")) {
+                    vbuf[0] = grid.items[i + 2].items[j];
+                    vbuf[2] = grid.items[i].items[j + 2];
+                    if (std.mem.eql(u8, &vbuf, "MAS") or std.mem.eql(u8, &vbuf, "SAM")) {
+                        try stdout.print("Found X centered at {d},{d}\n", .{ i + 1, j + 1 });
+                        sum += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    try stdout.print("X-Sum is {d}\n", .{sum});
 }
