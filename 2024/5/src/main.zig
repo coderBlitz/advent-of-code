@@ -93,8 +93,6 @@ pub fn main() !void {
     }
 
     // Second loop reads the update pages
-    var update_set = std.AutoHashMap(usize, u8).init(alloc);
-    defer update_set.deinit();
     var sum: usize = 0;
     while (reader.readUntilDelimiterOrEof(&buf, '\n')) |maybe_line| : (i += 1) {
         const line = maybe_line orelse break;
@@ -105,41 +103,38 @@ pub fn main() !void {
         // Split the entries
         _ = try split(&fields, line, ',');
 
-        // Part 1
-        // Start with empty hashset.
-        // For each number:
-        // 1. Check if slice from 0 to previous number is in set, if so rule violated (STOP).
-        // 2. If current number is in set, remove it.
-        // 3. Insert rules for number to set.
-        var j: usize = 0;
-        var valid = true;
-        while (j < fields.items.len) : (j += 1) {
-            const cur = try std.fmt.parseInt(usize, fields.items[j], 10);
+        var nums = std.ArrayList(usize).init(alloc);
+        defer nums.deinit();
 
-            // Check if previous numbers in set
-            for (fields.items[0..j]) |v| {
-                const num = try std.fmt.parseInt(usize, v, 10);
-                if (update_set.getKey(num)) |_| {
-                    valid = false;
-                    break;
-                }
-            }
-
-            // Remove current num if in set.
-            _ = (update_set.remove(cur));
-
-            // Add rules for cur to set
-            if (pre_rules.get(cur)) |arr| {
-                for (arr.items) |n| {
-                    try update_set.put(n, 0);
-                }
-            }
+        for (fields.items) |field| {
+            try nums.append(try std.fmt.parseInt(usize, field, 10));
         }
 
-        // If valid, get middle entry and sum.
-        if (valid) {
+        // Part 2
+        // Start with 2 empty hashsets.
+        // First set is of the update rule numbers (everything on this line).
+        // Second set is of the combined rules from everything in the first set.
+        // Whichever number from the first set is not in the second set goes first.
+        // Repeat process with remaining numbers. Find whichever number in first set is not in second, place next.
+        // etc.
+        // NOTE: Can probably use the u8 in hashmap to count how many times a number is a rule to avoid
+        //        needless reconstruction every time by subtracting till 0 then removing.
+        var update_set = std.AutoHashMap(usize, u8).init(alloc);
+        defer update_set.deinit();
+        var j: isize = 0;
+        const valid = false;
+        while (j < nums.items.len) : (j += 1) {}
+
+        // If invalid, get middle entry and sum.
+        if (!valid) {
             sum += try std.fmt.parseInt(usize, fields.items[fields.items.len / 2], 10);
         }
+
+        try stdout.print("Final row: ", .{});
+        for (nums.items) |num| {
+            try stdout.print("{d} ", .{num});
+        }
+        try stdout.print("\n", .{});
 
         fields.clearRetainingCapacity();
         update_set.clearRetainingCapacity();
@@ -147,5 +142,5 @@ pub fn main() !void {
         try stdout.print("Error\n", .{});
     }
 
-    try stdout.print("Sum is {d}\n", .{sum});
+    try stdout.print("Invalid sum is {d}\n", .{sum});
 }
