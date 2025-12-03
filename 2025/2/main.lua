@@ -7,26 +7,38 @@ function is_valid_id(
 	---@type string
 	num
 )
-	-- Strings must be even in length to be candidate.
-	if string.len(num) % 2 == 0 then
-		local half_len = string.len(num) / 2
-		local valid = 1
+	local len = string.len(num)
+	local half_len = len // 2
 
-		-- For half id length
-		for i = 1, half_len do
-			-- If corresponding chars don't match, invalid.
-			local c1 = string.sub(num, i, i)
-			local c2 = string.sub(num, i + half_len, i + half_len)
+	-- Check all possible sequence lengths
+	for seq_size = 1, half_len do
+		local valid = false
 
-			if c1 ~= c2 then
-				return true
+		-- If length divisible by sequence length, check.
+		-- Else try next size.
+		if len % seq_size == 0 then
+			seq = string.sub(num, 1, seq_size)
+			n = len // seq_size
+
+			-- If loop finishes, invalid
+			for i = 1, n-1 do
+				seq2 = string.sub(num, seq_size * i + 1, seq_size * (i + 1))
+
+				-- Mismatch
+				if seq ~= seq2 then
+					valid = true
+					break
+				end
+			end
+
+			-- If number passes loop above, then definitely invalid.
+			if valid == false then
+				return false
 			end
 		end
-	else
-		return true
 	end
 
-	return false
+	return true
 end
 
 -- Read file
@@ -45,7 +57,6 @@ for line in io.lines(arg[1]) do
 		for id = start_v, end_v do
 			-- Check start ID
 			if not is_valid_id(tostring(id)) then
-				--print(id, "is invalid")
 				invalid_ids = invalid_ids + 1
 				invalid_total = invalid_total + id
 			end
