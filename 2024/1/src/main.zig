@@ -46,7 +46,8 @@ pub fn main() !void {
     //var alloc_buf = std.mem.zeroes([2048]u8);
     //var buf_alloc = std.heap.FixedBufferAllocator.init(&alloc_buf);
     //const alloc = buf_alloc.allocator();
-    const alloc = std.heap.page_allocator;
+    var page_alloc = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    const alloc = page_alloc.allocator();
     //defer alloc.deinit();
 
     var buf: [4096]u8 = undefined;
