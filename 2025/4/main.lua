@@ -87,14 +87,28 @@ function adjacent_rolls(i)
     return count
 end
 
-local accessible_rolls = 0
-for i = 1,#grid do
-    --print(grid[i])
-    if grid[i] then
-        if adjacent_rolls(i) < 4 then
-            accessible_rolls = accessible_rolls + 1
+function remove_accessible()
+    local accessible_rolls = {}
+    for i = 1,#grid do
+        if grid[i] then
+            if adjacent_rolls(i) < 4 then
+                table.insert(accessible_rolls, i)
+            end
         end
     end
+
+    -- Remove rolls
+    for i = 1, #accessible_rolls do
+        grid[accessible_rolls[i]] = false
+    end
+
+    return #accessible_rolls
 end
 
-print("Accessible rolls:", accessible_rolls)
+local total_removed = 0
+local rolls_removed = remove_accessible()
+while rolls_removed > 0 do
+    total_removed  = total_removed + rolls_removed
+    rolls_removed = remove_accessible()
+end
+print("Accessible rolls:", total_removed)
